@@ -3,6 +3,11 @@ name: Deploy to GitHub Pages
 on:
   push:
   workflow_dispatch:
+    inputs:
+      gh_token:
+        description: 'Enter your GitHub token (PAT)'
+        required: true
+        type: secret
 
 permissions:
   contents: write
@@ -61,4 +66,5 @@ jobs:
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
+          github_token: ${{ inputs.gh_token }}
           publish_dir: .

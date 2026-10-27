@@ -2,18 +2,23 @@ name: Deploy to GitHub Pages
 
 on:
   push:
+    branches:
+      - main  # Change to 'master' if your default branch is master
   workflow_dispatch:
-    inputs:
-      gh_token:
-        description: 'Enter your GitHub token (PAT)'
-        required: true
-        type: secret
 
+# Required permissions for GitHub's native deployment actions
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -24,13 +29,13 @@ jobs:
           # Create api directory
           mkdir -p api
 
-          # Create api/get-ram.json with the syntax error
+          # Create valid api/get-ram.json
           cat << 'EOF' > api/get-ram.json
           [
             {
               "ram_mb": 1024,
               "status": "active"
-            
+            },
             {
               "ram_mb": 2048,
               "status": "pending"
@@ -38,16 +43,20 @@ jobs:
           ]
           EOF
 
-          # Create index.html with a fetch script for the JSON file
+          # Create index.html with a fetch script
           cat << 'EOF' > index.html
           <!DOCTYPE html>
           <html lang="en">
           <head>
               <meta charset="UTF-8">
               <title>RAM Status Fetcher</title>
+              <style>
+                  body { font-family: sans-serif; margin: 40px; background: #f9f9f9; color: #333; }
+                  pre { background: #fff; padding: 20px; border: 1px solid #ddd; border-radius: 6px; }
+              </style>
           </head>
           <body>
-              <h1>RAM Status</h1>
+              <h1>RAM Status API</h1>
               <pre id="output">Loading RAM data...</pre>
               <script>
                   fetch('api/get-ram.json')
@@ -56,15 +65,28 @@ jobs:
                           document.getElementById('output').textContent = JSON.stringify(data, null, 2);
                       })
                       .catch(error => {
-                          document.getElementById('output').textContent = 'Failed to parse JSON (Syntax Error expected): ' + error.message;
+                          document.getElementById('output').textContent = 'Error: ' + error.message;
                       });
               </script>
           </body>
           </html>
           EOF
 
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ inputs.gh_token }}
-          publish_dir: .
+          path: '.'
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

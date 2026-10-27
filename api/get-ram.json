@@ -1,0 +1,10 @@
+[
+  {
+    "ram_mb": 1024,
+    "status": "active"
+  
+  {
+    "ram_mb": 2048,
+    "status": "pending"
+  }
+]

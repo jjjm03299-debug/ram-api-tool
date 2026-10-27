@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>RAM Status Fetcher</title>
+</head>
+<body>
+    <h1>RAM Status</h1>
+    <pre id="output">Loading RAM data...</pre>
+    <script>
+        fetch('api/get-ram.json')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('output').textContent = JSON.stringify(data, null, 2);
+            })
+            .catch(error => {
+                document.getElementById('output').textContent = 'Failed to parse JSON (Syntax Error expected): ' + error.message;
+            });
+    </script>
+</body>
+</html>
